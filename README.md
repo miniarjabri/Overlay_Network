@@ -16,3 +16,7 @@ App3 a reçu un message de App2 : Hello, App3!
 App3 => App1 : Hello, App1!
 App1 a reçu un message de App3 : Hello, App1!
 ```
+## à changer / remarques prof:
+1. il faut pouvoir lancer plusieurs app et chaqeu app choisir d'envoyer un message à x app.
+2. dans la classe application, definir ça "rebind"     Naming.rebind("rmi://localhost/App1", app1);
+3. dans la classe overlaynetwork, définir "ApplicationInterface remoteApp1 = (ApplicationInterface) Naming.lookup("rmi://localhost/App1");"
