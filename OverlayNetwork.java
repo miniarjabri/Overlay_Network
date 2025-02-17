@@ -1,37 +1,45 @@
+import java.rmi.Naming;
+import java.rmi.registry.LocateRegistry;
+
 public class OverlayNetwork {
     public static void main(String[] args) {
-        // Create instances of the applications with their logical addresses, IP addresses, ports, and RMI URLs
-        Application app1 = new Application("App2-1", "192.168.1.1", 8080, "rmi://app1");
-        Application app2 = new Application("App2-2", "192.168.1.2", 8081, "rmi://app2");
-        Application app3 = new Application("App3-1", "192.168.1.3", 8082, "rmi://app3");
+        try {
+            // Démarrer le registre RMI sur le port 1099
+            LocateRegistry.createRegistry(1099);
 
-        // Creating connections between applications
-        Connection connection1 = new Connection(app1, app2);
-        Connection connection2 = new Connection(app2, app3);
-        Connection connection3 = new Connection(app3, app1);
-        
-        // Simulate sending messages
-        app1.sendMessage("Hello, App2!", app2);
-        app2.sendMessage("Hello, App3!", app3);
-        app3.sendMessage("Hello, App1!", app1);
+            // Créer les applications
+            Application app1 = new Application("App1", "192.168.1.1", 8080);
+            Application app2 = new Application("App2", "192.168.1.2", 8081);
+            Application app3 = new Application("App3", "192.168.1.3", 8082);
 
-        // Simulate receiving messages (optional if receiveMessage is called inside sendMessage)
-        app2.receiveMessage("Hello from App1!");
-        app3.receiveMessage("Hello from App2!");
-        app1.receiveMessage("Hello from App3!");
-        
-        // Establish the connections
-        connection1.establishConnection();
-        connection2.establishConnection();
-        connection3.establishConnection();
+            // Enregistrer les applications sur RMI
+            Naming.rebind("rmi://localhost/App1", app1);
+            Naming.rebind("rmi://localhost/App2", app2);
+            Naming.rebind("rmi://localhost/App3", app3);
 
-        // Close the connections (if needed)
-        connection1.closeConnection();
-        connection2.closeConnection();
-        connection3.closeConnection();
+            System.out.println("Applications enregistrées sur RMI.");
+
+            // Récupérer les applications distantes
+            ApplicationInterface remoteApp1 = (ApplicationInterface) Naming.lookup("rmi://localhost/App1");
+            ApplicationInterface remoteApp2 = (ApplicationInterface) Naming.lookup("rmi://localhost/App2");
+            ApplicationInterface remoteApp3 = (ApplicationInterface) Naming.lookup("rmi://localhost/App3");
+
+            // Créer les connexions
+            Connection connection1 = new Connection(remoteApp1, remoteApp2);
+            Connection connection2 = new Connection(remoteApp2, remoteApp3);
+            Connection connection3 = new Connection(remoteApp3, remoteApp1);
+
+            // Établir les connexions
+            connection1.establishConnection();
+            connection2.establishConnection();
+            connection3.establishConnection();
+
+            // Envoyer des messages via RMI
+            connection1.sendMessage("Hello, App2 !");
+            connection2.sendMessage("Hello, App3 !");
+            connection3.sendMessage("Hello, App1 !");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
-
-/* Le réseau de recouvrement: comme dans la photo
-Niveau 2 : "App2-1", "App2-2" pour les applications de niveau 2.
-Niveau 3 : "App3-1", "App3-2" pour les applications de niveau 3. */

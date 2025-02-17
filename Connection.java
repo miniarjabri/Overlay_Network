@@ -1,22 +1,27 @@
-// Connection class to represent the link between two applications
 class Connection {
-    private Application from;  // Starting application
-    private Application to;    // Target application
-    
-    // Constructor to initialize the connection
-    public Connection(Application from, Application to) {
+    private ApplicationInterface from;
+    private ApplicationInterface to;
+
+    public Connection(ApplicationInterface from, ApplicationInterface to) {
         this.from = from;
         this.to = to;
     }
-    
-    // Method to simulate establishing a connection
+
+    // Établir une connexion entre deux applications
     public void establishConnection() {
-        System.out.println("Establishing connection from " + from.getLogicalAddress() + " to " + to.getLogicalAddress());
-        // Additional connection logic can be implemented here (e.g., sockets, RMI)
+        try {
+            System.out.println("Connexion établie entre " + from.getLogicalAddress() + " et " + to.getLogicalAddress());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    // Method to close the connection (if applicable)
-    public void closeConnection() {
-        System.out.println("Closing connection from " + from.getLogicalAddress() + " to " + to.getLogicalAddress());
+    // Envoyer un message via RMI
+    public void sendMessage(String message) {
+        try {
+            to.sendMessage(message, from.getLogicalAddress());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -1,49 +1,34 @@
-class Application {
-    private String logicalAddress;  // Logical address (e.g., "App1", "App2")
-    private String ipAddress;       // IP address (e.g., "192.168.1.1")
-    private int port;               // Port number (e.g., 8080)
-    private String urlRmi;          // RMI URL (optional, e.g., "rmi://app1")
-    
-    // Constructor to initialize the application
-    public Application(String logicalAddress, String ipAddress, int port, String urlRmi) {
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+
+// Implémentation de l'application en tant que service RMI
+public class Application extends UnicastRemoteObject implements ApplicationInterface {
+    private String logicalAddress;  // Adresse logique (ex: "App1")
+    private String ipAddress;       // Adresse IP (ex: "192.168.1.1")
+    private int port;               // Port de communication
+
+    public Application(String logicalAddress, String ipAddress, int port) throws RemoteException {
+        super(); // Permet l'exportation de l'objet en RMI
         this.logicalAddress = logicalAddress;
         this.ipAddress = ipAddress;
         this.port = port;
-        this.urlRmi = urlRmi;
     }
 
-    // Getters for the attributes
-    public String getLogicalAddress() {
+    @Override
+    public String getLogicalAddress() throws RemoteException {
         return logicalAddress;
     }
 
-    public String getIpAddress() {
-        return ipAddress;
+    @Override
+    public void sendMessage(String message, String sender) throws RemoteException {
+        System.out.println(sender + " => " + logicalAddress + " : " + message);
     }
 
-    public int getPort() {
-        return port;
-    }
-
-    public String getUrlRmi() {
-        return urlRmi;
-    }
-    
-    // Override toString for easy debugging
     @Override
     public String toString() {
-        return "Application{logicalAddress='" + logicalAddress + "', ipAddress='" + ipAddress + "', port=" + port + ", urlRmi='" + urlRmi + "'}";
-    }
-
-    // Methods to send and receive messages
-    public void sendMessage(String message, Application destination) {
-        System.out.println("Sending message from " + this.logicalAddress + " to " + destination.getLogicalAddress() + ": " + message);
-        // Here you could implement real messaging logic, e.g., via sockets or RMI
-        destination.receiveMessage(message);
-    }
-
-    public void receiveMessage(String message) {
-        System.out.println("Message received at " + this.logicalAddress + ": " + message);
-        // Additional logic to handle received message could be implemented here
+        return "Application{" +
+                "logicalAddress='" + logicalAddress + '\'' +
+                ", ipAddress='" + ipAddress + '\'' +
+                ", port=" + port + '}';
     }
 }
