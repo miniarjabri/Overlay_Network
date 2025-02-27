@@ -1,22 +1,55 @@
 # Overlay_Network
-# Pour tester:
-exécuter "java OverlayNetwork" dans le terminal 
-### le résultat: 
-```shell
-PS C:\Users\pc\Desktop\java> java OverlayNetwork
->> 
-Applications enregistrées sur RMI.
-Connexion établie entre App1 et App2
-Connexion établie entre App2 et App3
-Connexion établie entre App3 et App1
-App1 => App2 : Hello, App2!
-App2 a reçu un message de App1 : Hello, App2!
-App2 => App3 : Hello, App3!
-App3 a reçu un message de App2 : Hello, App3!
-App3 => App1 : Hello, App1!
-App1 a reçu un message de App3 : Hello, App1!
-```
-## à changer / remarques prof:
-1. il faut pouvoir lancer plusieurs app et chaque app choisit d'envoyer un message à x app.
-2. dans la classe application, definir ça "rebind"     Naming.rebind("rmi://localhost/App1", app1);
-3. dans la classe overlaynetwork, définir "ApplicationInterface remoteApp1 = (ApplicationInterface) Naming.lookup("rmi://localhost/App1");"
+
+## 🏗️ Architecture du Projet
+L'application repose sur plusieurs composants clés :
+
+- **ApplicationInterface** : Interface RMI définissant les méthodes accessibles à distance.
+- **Application** : Représente un nœud du réseau, stocke ses voisins et gère l'envoi/réception des messages.
+- **ApplicationServer** : Enregistre les applications sur le réseau et définit leurs connexions.
+- **ApplicationClient** : Permet d'envoyer un message d'une application à une autre en utilisant le routage.
+- **RoutingManager** : Trouve le chemin optimal pour la transmission des messages.
+- **AuthorizationManager** : Vérifie si un message respecte les règles avant d'être transmis.
+
+## 📜 Fonctionnalités
+✅ Mise en place d'un **réseau de recouvrement statique**
+✅ **Envoi et réception de messages** entre applications via Java RMI
+✅ **Routage intelligent** basé sur l'algorithme BFS
+✅ **Filtrage des messages** en fonction des règles de sécurité
+✅ **Gestion des voisins** pour assurer une transmission efficace
+
+## ⚙️ Installation et Exécution
+
+### 🚀 Étapes d'installation
+1. **Cloner le dépôt** :
+   ```bash
+   git clone https://github.com/miniarjabri/Overlay_Network.git
+   cd Overlay_Network
+   ```
+2. **Compiler le projet** :
+   ```bash
+   javac *.java
+   ```
+3. **Démarrer le registre RMI** :
+   ```bash
+   start rmiregistry
+   ```
+4. **Lancer le serveur** :
+   ```bash
+   java ApplicationServer <AppName>
+   ```
+5. **Exécuter le client** :
+   ```bash
+   java ApplicationClient <sourceAppName> <destAppName> <message>
+   ```
+
+## 🚀 Améliorations Futures
+- Implémentation d'une **topologie dynamique** permettant l'ajout de nouveaux nœuds.
+- Optimisation du **routage et de la gestion des chemins**.
+- Intégration d'un **système de logs et d'affichage en temps réel**.
+- Développement d'une **interface graphique** pour gérer le réseau plus intuitivement.
+
+## 🤝 Contributeurs
+👩‍💻 **Miniar Jabri**  
+👨‍💻 **Mohamed Slama**  
+👩‍💻 **Asma Bahri**  
+
