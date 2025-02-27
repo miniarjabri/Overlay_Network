@@ -1,18 +1,36 @@
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.List;
 
-// Implémentation de l'application en tant que service RMI
 public class Application extends UnicastRemoteObject implements ApplicationInterface {
     private static final long serialVersionUID = 1L;
-    private String logicalAddress;  // Adresse logique (ex: "App1")
-    private String ipAddress;       // Adresse IP (ex: "192.168.1.1")
-    private int port;               // Port de communication
+    private String logicalAddress;
+    private String ipAddress;
+    private int port;
+    private List<ApplicationInterface> neighbors;
 
     public Application(String logicalAddress, String ipAddress, int port) throws RemoteException {
-        super(); // Permet l'exportation de l'objet en RMI
+        super();
         this.logicalAddress = logicalAddress;
         this.ipAddress = ipAddress;
         this.port = port;
+        this.neighbors = new ArrayList<>();
+    }
+
+    public void addNeighbor(ApplicationInterface neighbor) {
+        neighbors.add(neighbor);
+    }
+
+    @Override
+    public List<ApplicationInterface> getNeighbors() throws RemoteException {
+        return neighbors;
+    }
+
+    @Override
+    public void sendMessage(String message, String sender) throws RemoteException {
+        // Affichage du message reçu
+        System.out.println("[" + logicalAddress + "] Message reçu de " + sender + " : " + message);
     }
 
     @Override
@@ -21,8 +39,8 @@ public class Application extends UnicastRemoteObject implements ApplicationInter
     }
 
     @Override
-    public void sendMessage(String message, String sender) throws RemoteException {
-        System.out.println(sender + " => " + logicalAddress + " : " + message);
+    public String getIpAddress() throws RemoteException {
+        return ipAddress;
     }
 
     @Override
@@ -30,6 +48,7 @@ public class Application extends UnicastRemoteObject implements ApplicationInter
         return "Application{" +
                 "logicalAddress='" + logicalAddress + '\'' +
                 ", ipAddress='" + ipAddress + '\'' +
-                ", port=" + port + '}';
+                ", port=" + port +
+                '}';
     }
 }
