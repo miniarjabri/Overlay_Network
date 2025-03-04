@@ -1,5 +1,9 @@
 # Overlay_Network
 # Version 2
+# Remarques prof: 
+- routing manager: faire un algorithme qui determine le chemin ***Dijskstra***
+- aithorizationManager: l'intégrer dans les autres applications.
+- utiliser une topologie plus complexe ou il y a une redondance de chemin pour voir comment il détérmine le meilleur chemin avec l'algo Dijsktra
 
 ## 🏗️ Architecture du Projet
 L'application repose sur plusieurs composants clés :
