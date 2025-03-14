@@ -33,8 +33,10 @@ java -cp ".;lib/json-20250107.jar" ApplicationServer App3
 java -cp ".;lib/json-20250107.jar" ApplicationServer App4
 java -cp ".;lib/json-20250107.jar" ApplicationServer App5
 java -cp ".;lib/json-20250107.jar" ApplicationServer App6
-```shell
+
+```
 tester l'envoie d'un message:  => ENA MATEMCHILICH ***probléme***
+
 ```shell
 java -cp ".;lib/json-20250107.jar" ApplicationClient App1 App3 "Message de test"
 ```
