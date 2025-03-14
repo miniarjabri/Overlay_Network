@@ -14,13 +14,17 @@ court envoyé depuis une autre application cible
  ✓ c'est fait 
  
 ## à faire ...
+```shell
 au lieu d'utiliser 3 Apps déja pretes, on configure un fichier topologie.json qui contient 6 Apps (si on veut changer la topologie, on change juse ce fichier et pas les autres fichiers) tout se fait de maniere dynamique
+```
+
+ ✓ c'est fait 
 
 ## comment ça marche: 
 compiler le projet :
 ```shell
 javac -cp ".;lib/json-20250107.jar" *.java
-``
+```
 lancer le serveur pour chaque application
 ```shell
 java -cp ".;lib/json-20250107.jar" ApplicationServer App1
