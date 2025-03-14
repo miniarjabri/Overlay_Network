@@ -1,23 +1,13 @@
-# Version 2 dans Branch 2
+# Version 3
 # Overlay_Network
-# Pour tester:
-exécuter "java OverlayNetwork" dans le terminal 
-### le résultat: 
+## Étape 3 : Mise en place des applications de
+diffusion/réception de contenu
+Cette étape concerne la mise en place des applications de diffusion/réception de contenu. Chaque application
+cible doit désormais pouvoir envoyer un contenu à tous les autres applications cibles ou recevoir un message
+court envoyé depuis une autre application cible
+## dernieres remarques du prof: 
 ```shell
-PS C:\Users\pc\Desktop\java> java OverlayNetwork
->> 
-Applications enregistrées sur RMI.
-Connexion établie entre App1 et App2
-Connexion établie entre App2 et App3
-Connexion établie entre App3 et App1
-App1 => App2 : Hello, App2!
-App2 a reçu un message de App1 : Hello, App2!
-App2 => App3 : Hello, App3!
-App3 a reçu un message de App2 : Hello, App3!
-App3 => App1 : Hello, App1!
-App1 a reçu un message de App3 : Hello, App1!
+
 ```
-## à changer / remarques prof:
-1. il faut pouvoir lancer plusieurs app et chaque app choisit d'envoyer un message à x app.
-2. dans la classe application, definir ça "rebind"     Naming.rebind("rmi://localhost/App1", app1);
-3. dans la classe overlaynetwork, définir "ApplicationInterface remoteApp1 = (ApplicationInterface) Naming.lookup("rmi://localhost/App1");"
+## à faire
+au lieu d'utiliser 3 Apps déja pretes, on configure un fichier topologie.json qui contient 6 Apps (si on veut changer la topologie, on change juse ce fichier et pas les autres fichiers) tout se fait de maniere dynamique
