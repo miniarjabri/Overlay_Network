@@ -10,7 +10,6 @@ public class Application extends UnicastRemoteObject implements ApplicationInter
     private String ipAddress;
     private int port;
     private List<ApplicationInterface> neighbors;
-    // Liste de mots interdits et longueur maximale
     private static final List<String> forbiddenWords = Arrays.asList("spam", "forbidden", "blocked");
     private static final int maxMessageLength = 200;
 
@@ -22,7 +21,8 @@ public class Application extends UnicastRemoteObject implements ApplicationInter
         this.neighbors = new ArrayList<>();
     }
 
-    public void addNeighbor(ApplicationInterface neighbor) {
+    @Override
+    public void addNeighbor(ApplicationInterface neighbor) throws RemoteException {
         neighbors.add(neighbor);
     }
 
@@ -33,50 +33,38 @@ public class Application extends UnicastRemoteObject implements ApplicationInter
 
     @Override
     public void sendMessage(String message, String sender) throws RemoteException {
-        // Vérifications d'autorisation
         if (!authorize(message)) {
             System.out.println("Autorisation refusée pour le message de " + sender + " : " + message);
             return;
         }
-        
         System.out.println("[" + logicalAddress + "] Message reçu de " + sender + " : " + message);
-
-        // Diffusion du message à tous les voisins
         for (ApplicationInterface neighbor : neighbors) {
             neighbor.sendMessage(message, logicalAddress);
         }
     }
 
-    // Nouvelle méthode pour recevoir un message
-    public void receiveMessage(String message) {
-        System.out.println("[" + logicalAddress + "] Message reçu : " + message);
-        // Traitement supplémentaire pour le message
-    }
-
-    // Méthode d'autorisation directement intégrée dans la classe Application
-    private boolean authorize(String message) {
-        // Vérifications de base
-        if (message == null || message.trim().isEmpty()) {
-            System.out.println("Autorisation refusée : le message est vide.");
-            return false;
+    @Override
+    public void forwardMessage(String message, String sender, String nextHop) throws RemoteException {
+        if (!authorize(message)) {
+            System.out.println("Autorisation refusée pour le message de " + sender + " : " + message);
+            return;
         }
-        if (message.length() > maxMessageLength) {
-            System.out.println("Autorisation refusée : le message est trop long (" + message.length() + " caractères).");
-            return false;
-        }
-        for (String word : forbiddenWords) {
-            if (message.toLowerCase().contains(word.toLowerCase())) {
-                System.out.println("Autorisation refusée : le message contient le mot interdit \"" + word + "\".");
-                return false;
+        System.out.println("[" + logicalAddress + "] Message reçu de " + sender + " pour " + nextHop + " : " + message);
+        for (ApplicationInterface neighbor : neighbors) {
+            if (neighbor.getLogicalAddress().equals(nextHop)) {
+                neighbor.forwardMessage(message, logicalAddress, nextHop);
+                break;
             }
         }
-        if (!Character.isUpperCase(message.charAt(0))) {
-            System.out.println("Autorisation refusée : le message doit commencer par une majuscule.");
-            return false;
+    }
+
+    private boolean authorize(String message) {
+        if (message == null || message.trim().isEmpty()) return false;
+        if (message.length() > maxMessageLength) return false;
+        for (String word : forbiddenWords) {
+            if (message.toLowerCase().contains(word.toLowerCase())) return false;
         }
-        
-        System.out.println("Autorisation accordée pour le message : " + message);
-        return true;
+        return Character.isUpperCase(message.charAt(0));
     }
 
     @Override
@@ -91,10 +79,6 @@ public class Application extends UnicastRemoteObject implements ApplicationInter
 
     @Override
     public String toString() {
-        return "Application{" +
-                "logicalAddress='" + logicalAddress + '\'' +
-                ", ipAddress='" + ipAddress + '\'' +
-                ", port=" + port +
-                '}';
+        return "Application{" + "logicalAddress='" + logicalAddress + '\'' + ", ipAddress='" + ipAddress + '\'' + ", port=" + port + '}';
     }
 }

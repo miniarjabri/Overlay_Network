@@ -12,25 +12,30 @@ public class ApplicationClient {
         String message = args[2];
 
         try {
-            // Recherche des applications source et destination via RMI
             ApplicationInterface source = (ApplicationInterface) Naming.lookup("rmi://localhost/" + sourceName);
             ApplicationInterface destination = (ApplicationInterface) Naming.lookup("rmi://localhost/" + destName);
+            // Recharger toutes les App dans le RoutingManager depuis le registre RMI
+            String[] allApps = {"App1", "App2", "App3", "App4", "App5", "App6"};
+            for (String appName : allApps) {
+                try {
+                    ApplicationInterface app = (ApplicationInterface) Naming.lookup("rmi://localhost/" + appName);
+                    RoutingManager.addApplication(app);
+                } catch (Exception e) {
+                    System.out.println("Erreur lors du chargement de " + appName + " dans le RoutingManager");
+                }
+            }
 
-            // Calcul de la route
             List<ApplicationInterface> route = RoutingManager.findRoute(source, destination);
             if (route == null) {
                 System.out.println("Aucun chemin trouvé de " + sourceName + " à " + destName);
                 return;
             }
-
-            // Envoi du message de chaque nœud vers le suivant
             for (int i = 0; i < route.size() - 1; i++) {
                 ApplicationInterface current = route.get(i);
                 ApplicationInterface next = route.get(i + 1);
-                current.sendMessage(message, current.getLogicalAddress());
-                System.out.println("Message de " + current.getLogicalAddress() + " transmis à " + next.getLogicalAddress());
+                current.forwardMessage(message, current.getLogicalAddress(), next.getLogicalAddress());
+                System.out.println("Message transmis de " + current.getLogicalAddress() + " à " + next.getLogicalAddress());
             }
-
             System.out.println("Le message a atteint " + destination.getLogicalAddress());
         } catch (Exception e) {
             e.printStackTrace();
