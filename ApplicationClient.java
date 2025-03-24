@@ -1,4 +1,3 @@
-// ========================= ApplicationClient.java (version finale corrigée) =========================
 import java.rmi.Naming;
 import java.util.*;
 
@@ -22,8 +21,6 @@ public class ApplicationClient {
                 try {
                     ApplicationInterface app = (ApplicationInterface) Naming.lookup("rmi://localhost/" + appName);
                     appMap.put(appName, app);
-                    // Correction ici : utilisation d'une méthode statique de RoutingManager ou une structure locale de topologie si ApplicationInterface ne possède pas getNeighborNames()
-                    // Si getNeighborNames() n'existe pas, remplacer ceci par une topologie définie en dur :
                     List<String> staticNeighbors = getStaticNeighbors(appName);
                     neighborMap.put(appName, staticNeighbors);
                 } catch (Exception e) {
@@ -36,7 +33,6 @@ public class ApplicationClient {
                 return;
             }
 
-            // Dijkstra sur le graphe logique
             Map<String, Integer> dist = new HashMap<>();
             Map<String, String> prev = new HashMap<>();
             PriorityQueue<String> queue = new PriorityQueue<>(Comparator.comparingInt(dist::get));
@@ -72,7 +68,6 @@ public class ApplicationClient {
                 return;
             }
 
-            // Envoi du message via forwardMessage
             for (int i = 0; i < path.size() - 1; i++) {
                 String current = path.get(i);
                 String next = path.get(i + 1);
@@ -85,7 +80,6 @@ public class ApplicationClient {
         }
     }
 
-    // Méthode temporaire pour charger une topologie locale statique (si getNeighborNames() non dispo)
     private static List<String> getStaticNeighbors(String appName) {
         Map<String, List<String>> topology = new HashMap<>();
         topology.put("App1", Arrays.asList("App2", "App3", "App4"));

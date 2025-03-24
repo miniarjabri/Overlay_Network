@@ -4,7 +4,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Scanner;
 import java.util.*;
 
 public class ApplicationServer {
@@ -35,8 +34,13 @@ public class ApplicationServer {
                 if (appName.equals(localAppName)) {
                     String ip = node.getString("ip");
                     int port = node.getInt("port");
+                    JSONArray groupsArray = node.getJSONArray("groups");
+                    List<String> groups = new ArrayList<>();
+                    for (int j = 0; j < groupsArray.length(); j++) {
+                        groups.add(groupsArray.getString(j));
+                    }
 
-                    app = new Application(appName, ip, port);
+                    app = new Application(appName, ip, port, groups);
                     Naming.rebind("rmi://localhost/" + appName, app);
                     System.out.println(appName + " est enregistré et en attente de messages.");
 
@@ -44,7 +48,7 @@ public class ApplicationServer {
                     for (int j = 0; j < neighbors.length(); j++) {
                         String neighborName = neighbors.getString(j);
                         app.addNeighborName(neighborName);
-                        System.out.println("Voisin ajouté : " + neighborName);
+                        System.out.println("Voisin ajouté (nom) : " + neighborName);
                     }
                     break;
                 }
@@ -55,50 +59,90 @@ public class ApplicationServer {
                 System.exit(1);
             }
 
-            // Message sending loop
+            List<String> neighborNames = app.getNeighborNames();
+            System.out.println("Attente des voisins : " + neighborNames);
+            boolean allNeighborsReady = false;
+            while (!allNeighborsReady) {
+                allNeighborsReady = true;
+                for (String neighborName : neighborNames) {
+                    try {
+                        ApplicationInterface neighbor = (ApplicationInterface) Naming.lookup("rmi://localhost/" + neighborName);
+                        if (!app.getNeighbors().contains(neighbor)) {
+                            app.addNeighbor(neighbor);
+                        }
+                    } catch (Exception e) {
+                        allNeighborsReady = false;
+                        Thread.sleep(2000);
+                    }
+                }
+            }
+            System.out.println("Tous les voisins sont connectés : " + neighborNames);
+
             while (true) {
-                System.out.println("\nEntrez une commande (envoyer <destAppName> <message> ou 'envoyer Multicast <message>' ou 'exit' pour quitter):");
+                System.out.println("\nEntrez une commande (envoyer <destAppName> <message>, 'envoyer Multicast to <group> <message>', 'envoyer Broadcast <message>', ou 'exit' pour quitter):");
                 String input = sc.nextLine();
 
                 if (input.equalsIgnoreCase("exit")) {
                     break;
                 }
 
-                String[] parts = input.split(" ", 3);
-                if (parts.length < 3 || !parts[0].equalsIgnoreCase("envoyer")) {
-                    System.out.println("Commande invalide. Utilisation : envoyer <destAppName> <message> ou envoyer Multicast <message>");
+                String[] parts = input.split(" ", 5);
+                if (parts.length < 2 || !parts[0].equalsIgnoreCase("envoyer")) {
+                    System.out.println("Commande invalide. Utilisation : envoyer <destAppName> <message>, envoyer Multicast to <group> <message>, ou envoyer Broadcast <message>");
                     continue;
                 }
 
-                String destAppName = parts[1];
-                String message = parts[2];
+                String commandType = parts[1];
 
-                if (destAppName.equalsIgnoreCase("Multicast")) {
-                    // Multicast: Send the message to all applications
-                    boolean messageDelivered = true;
-                    for (int i = 0; i < nodes.length(); i++) {
-                        JSONObject node = nodes.getJSONObject(i);
-                        String appName = node.getString("name");
+                if (commandType.equalsIgnoreCase("Broadcast")) {
+                    if (parts.length >= 4 && parts[2].equalsIgnoreCase("to")) {
+                        // Cas : "envoyer Broadcast to <group> <message>"
+                        String group = parts[3];
+                        String message = parts.length == 5 ? parts[4] : "";
+                        String messageId = localAppName + "_" + System.currentTimeMillis();
 
-                        if (!appName.equals(localAppName)) { // Do not send to itself
-                            try {
-                                ApplicationInterface destApp = (ApplicationInterface) Naming.lookup("rmi://localhost/" + appName);
-                                destApp.forwardMessage(message, localAppName, appName);
-                                System.out.println("Message transmis à " + appName);
-                            } catch (Exception e) {
-                                System.out.println("Can't reach app " + appName);
-                                messageDelivered = false;
-                            }
+                        // Vérifier si l'app appartient au groupe
+                        List<String> localGroups = app.getGroups();
+                        if (!localGroups.contains(group)) {
+                            System.out.println("[" + localAppName + "] Je ne peux pas envoyer un broadcast au groupe " + group + " car je n'y appartient pas.");
+                            continue;
+                        }
+
+                        try {
+                            app.broadcastMessage(message, localAppName, messageId);
+                            System.out.println("Broadcast initié depuis " + localAppName + " pour le groupe " + group);
+                        } catch (Exception e) {
+                            System.out.println("Erreur lors du broadcast : " + e.getMessage());
+                        }
+                    } else {
+                        // Cas : "envoyer Broadcast <message>" (broadcast classique à tous)
+                        String message = parts.length == 3 ? parts[2] : "";
+                        String messageId = localAppName + "_" + System.currentTimeMillis();
+                        try {
+                            app.broadcastMessage(message, localAppName, messageId);
+                            System.out.println("Broadcast initié depuis " + localAppName);
+                        } catch (Exception e) {
+                            System.out.println("Erreur lors du broadcast : " + e.getMessage());
                         }
                     }
-
-                    if (messageDelivered) {
-                        System.out.println("Le message a été envoyé à toutes les applications.");
+                } else if (commandType.equalsIgnoreCase("Multicast")) {
+                    if (parts.length != 5 || !parts[2].equalsIgnoreCase("to")) {
+                        System.out.println("Utilisation : envoyer Multicast to <group> <message>");
+                        continue;
+                    }
+                    String group = parts[3];
+                    String message = parts[4];
+                    String messageId = localAppName + "_" + group + "_" + System.currentTimeMillis();
+                    try {
+                        app.multicastMessage(message, localAppName, messageId);
+                        System.out.println("Multicast initié depuis " + localAppName + " pour groupe " + group);
+                    } catch (Exception e) {
+                        System.out.println("Erreur lors du multicast : " + e.getMessage());
                     }
                 } else {
-                    // Unicast: Send the message to a specific application
+                    String destAppName = commandType;
+                    String message = parts.length == 3 ? parts[2] : "";
                     try {
-                        // Find the shortest path using Dijkstra's algorithm
                         Map<String, Integer> dist = new HashMap<>();
                         Map<String, String> prev = new HashMap<>();
                         PriorityQueue<String> queue = new PriorityQueue<>(Comparator.comparingInt(dist::get));
@@ -129,7 +173,6 @@ public class ApplicationServer {
                             step = prev.get(step);
                         }
 
-                        // Print the calculated path
                         System.out.println("Chemin calculé : " + path);
 
                         if (path.size() <= 1 || !path.get(0).equals(localAppName)) {
@@ -137,7 +180,6 @@ public class ApplicationServer {
                             continue;
                         }
 
-                        // Send the message via forwardMessage
                         boolean messageDelivered = true;
                         for (int i = 0; i < path.size() - 1; i++) {
                             String current = path.get(i);
@@ -167,7 +209,6 @@ public class ApplicationServer {
         }
     }
 
-    // Helper method to get all nodes from the topology
     private static List<String> getAllNodes(JSONArray nodes) {
         List<String> allNodes = new ArrayList<>();
         for (int i = 0; i < nodes.length(); i++) {
@@ -177,7 +218,6 @@ public class ApplicationServer {
         return allNodes;
     }
 
-    // Helper method to get neighbors of a node from the topology
     private static List<String> getNeighbors(String appName, JSONArray nodes) {
         for (int i = 0; i < nodes.length(); i++) {
             JSONObject node = nodes.getJSONObject(i);
