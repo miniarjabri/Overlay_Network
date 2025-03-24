@@ -54,7 +54,7 @@ public class Application extends UnicastRemoteObject implements ApplicationInter
         System.out.println("[" + logicalAddress + "] Message reçu directement de " + sender + " : " + message);
     }
 
-        @Override
+    @Override
     public void forwardMessage(String message, String sender, String nextHop) throws RemoteException {
         if (!authorize(message)) {
             System.out.println("[" + logicalAddress + "] Autorisation refusée pour le message de " + sender + " : " + message);
@@ -62,13 +62,16 @@ public class Application extends UnicastRemoteObject implements ApplicationInter
         }
 
         if (this.logicalAddress.equals(nextHop)) {
+            // Destination app
             System.out.println("[" + logicalAddress + "] Message reçu de " + sender + " pour moi : " + message);
             System.out.println("Le message a atteint " + logicalAddress);
         } else {
+            // Intermediate app
             System.out.println("[" + logicalAddress + "] Message reçu de " + sender + " pour " + nextHop + " : " + message);
             try {
                 ApplicationInterface next = (ApplicationInterface) Naming.lookup("rmi://localhost/" + nextHop);
                 next.forwardMessage(message, this.logicalAddress, nextHop);
+                System.out.println("[" + logicalAddress + "] Message transmis de " + logicalAddress + " à " + nextHop);
             } catch (Exception e) {
                 System.out.println("[" + logicalAddress + "] Erreur lors du forward vers " + nextHop + " : " + e.getMessage());
             }
